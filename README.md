@@ -29,7 +29,11 @@ Lombok
 
 IntelliJ IDEA
 
-📥 Clonar y Ejecutar
-1️⃣ Clonar repositorio
-git clone https://github.com/tu-usuario/tu-repo.git
-cd tu-repo
+📥Clonar el proyecto:
+
+1.)Ir a la terminal de Intellig IDEA del proyecto y escribir el siguiente comando:
+
+git clone https://github.com/aleeccortes/Refactorizacion.git
+
+2.)Ejecutar
+
