@@ -1,73 +1,65 @@
+// src/main/java/org/example/Entidades/HistoriaClinica.java
 package org.example.Entidades;
 
-import lombok.Getter;
-import lombok.ToString;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-@Getter
-@ToString(onlyExplicitlyIncluded = true)
+@Entity
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class HistoriaClinica implements Serializable {
 
-    @ToString.Include
-    private final String numeroHistoria;
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+    private Long id;
 
-    // 🔥 En lugar de imprimir el paciente completo, mostramos solo el nombre
-    @ToString.Include(name = "paciente")
-    private final String nombrePaciente;
+    @Column(name="numero_historia", nullable=false, unique=true, length=50)
+    private String numeroHistoria;
 
-    @ToString.Include
-    private final LocalDateTime fechaCreacion;
+    @OneToOne
+    @JoinColumn(name="paciente_id", nullable=false, unique=true)
+    private Paciente paciente;
 
-    private final List<String> diagnosticos = new ArrayList<>();
-    private final List<String> tratamientos = new ArrayList<>();
-    private final List<String> alergias = new ArrayList<>();
+    @Column(nullable=false)
+    private LocalDateTime fechaCreacion;
 
-    private final transient Paciente paciente; // evitamos imprimir en toString()
+    @ElementCollection
+    @CollectionTable(name="diagnosticos", joinColumns=@JoinColumn(name="historia_id"))
+    @Column(name="diagnostico", nullable=false, length=200)
+    private List<String> diagnosticos = new ArrayList<>();
 
-    public HistoriaClinica(Paciente paciente) {
+    @ElementCollection
+    @CollectionTable(name="tratamientos", joinColumns=@JoinColumn(name="historia_id"))
+    @Column(name="tratamiento", nullable=false, length=200)
+    private List<String> tratamientos = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name="alergias", joinColumns=@JoinColumn(name="historia_id"))
+    @Column(name="alergia", nullable=false, length=200)
+    private List<String> alergias = new ArrayList<>();
+
+    public HistoriaClinica(Paciente paciente){
         this.paciente = Objects.requireNonNull(paciente, "El paciente no puede ser nulo");
-        this.nombrePaciente = paciente.getNombreCompleto(); // Guardamos solo el nombre
         this.fechaCreacion = LocalDateTime.now();
         this.numeroHistoria = generarNumeroHistoria();
     }
 
-    private String generarNumeroHistoria() {
+    private String generarNumeroHistoria(){
         return "HC-" + paciente.getDni() + "-" + fechaCreacion.getYear();
     }
 
-    public void agregarDiagnostico(String diagnostico) {
-        if (diagnostico != null && !diagnostico.trim().isEmpty()) {
-            diagnosticos.add(diagnostico);
-        }
-    }
+    public void agregarDiagnostico(String d){ if (d!=null && !d.trim().isEmpty()) diagnosticos.add(d); }
+    public void agregarTratamiento(String t){ if (t!=null && !t.trim().isEmpty()) tratamientos.add(t); }
+    public void agregarAlergia(String a){ if (a!=null && !a.trim().isEmpty()) alergias.add(a); }
 
-    public void agregarTratamiento(String tratamiento) {
-        if (tratamiento != null && !tratamiento.trim().isEmpty()) {
-            tratamientos.add(tratamiento);
-        }
-    }
+    public List<String> getDiagnosticos(){ return Collections.unmodifiableList(diagnosticos); }
+    public List<String> getTratamientos(){ return Collections.unmodifiableList(tratamientos); }
+    public List<String> getAlergias(){ return Collections.unmodifiableList(alergias); }
 
-    public void agregarAlergia(String alergia) {
-        if (alergia != null && !alergia.trim().isEmpty()) {
-            alergias.add(alergia);
-        }
-    }
-
-    public List<String> getDiagnosticos() {
-        return Collections.unmodifiableList(diagnosticos);
-    }
-
-    public List<String> getTratamientos() {
-        return Collections.unmodifiableList(tratamientos);
-    }
-
-    public List<String> getAlergias() {
-        return Collections.unmodifiableList(alergias);
+    @Override public String toString(){
+        return "HistoriaClinica{numeroHistoria='" + numeroHistoria + "', paciente=" +
+                (paciente!=null?paciente.getNombreCompleto():"N/A") + ", fechaCreacion=" + fechaCreacion + "}";
     }
 }

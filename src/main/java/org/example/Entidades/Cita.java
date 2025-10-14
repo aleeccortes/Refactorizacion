@@ -1,110 +1,87 @@
+// src/main/java/org/example/Entidades/Cita.java
 package org.example.Entidades;
 
+import jakarta.persistence.*;
 import lombok.*;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
 
-@Getter
-@ToString(onlyExplicitlyIncluded = true)
+@Entity
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Cita implements Serializable {
 
-    @ToString.Include
-    private final Paciente paciente;
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+    private Long id;
 
-    @ToString.Include
-    private final Medico medico;
+    @ManyToOne(optional=false, fetch=FetchType.LAZY)
+    @JoinColumn(name="paciente_id", nullable=false)
+    private Paciente paciente;
 
-    @ToString.Include
-    private final Sala sala;
+    @ManyToOne(optional=false, fetch=FetchType.LAZY)
+    @JoinColumn(name="medico_id", nullable=false)
+    private Medico medico;
 
-    @ToString.Include
-    private final LocalDateTime fechaHora;
+    @ManyToOne(optional=false, fetch=FetchType.LAZY)
+    @JoinColumn(name="sala_id", nullable=false)
+    private Sala sala;
 
-    @ToString.Include
-    private final BigDecimal costo;
+    @Column(nullable=false)
+    private LocalDateTime fechaHora;
 
-    @Getter
-    @Setter
-    @ToString.Include
+    @Column(nullable=false, precision=10, scale=2)
+    private BigDecimal costo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false)
     private EstadoCita estado;
 
-    @Getter
-    @Setter
+    @Column(length=500)
     private String observaciones;
 
-    @Builder
-    public Cita(Paciente paciente,
-                Medico medico,
-                Sala sala,
-                LocalDateTime fechaHora,
-                BigDecimal costo) {
-
-        this.paciente = Objects.requireNonNull(paciente, "El paciente no puede ser nulo");
-        this.medico = Objects.requireNonNull(medico, "El médico no puede ser nulo");
-        this.sala = Objects.requireNonNull(sala, "La sala no puede ser nula");
-        this.fechaHora = Objects.requireNonNull(fechaHora, "La fecha y hora no pueden ser nulas");
-        this.costo = Objects.requireNonNull(costo, "El costo no puede ser nulo");
+    public Cita(Paciente paciente, Medico medico, Sala sala, LocalDateTime fechaHora, BigDecimal costo){
+        this.paciente = Objects.requireNonNull(paciente);
+        this.medico = Objects.requireNonNull(medico);
+        this.sala = Objects.requireNonNull(sala);
+        this.fechaHora = Objects.requireNonNull(fechaHora);
+        this.costo = Objects.requireNonNull(costo);
         this.estado = EstadoCita.PROGRAMADA;
         this.observaciones = "";
     }
 
-    public String toCsvString() {
+    public String toCsvString(){
         return String.format("%s,%s,%s,%s,%s,%s,%s",
-                paciente.getDni(),
-                medico.getDni(),
-                sala.getNumero(),
-                fechaHora,
-                costo,
-                estado.name(),
+                paciente.getDni(), medico.getDni(), sala.getNumero(),
+                fechaHora, costo, estado.name(),
                 observaciones.replaceAll(",", ";"));
     }
 
-    public static Cita fromCsvString(String csvString,
+    public static Cita fromCsvString(String csv,
                                      Map<String, Paciente> pacientes,
                                      Map<String, Medico> medicos,
                                      Map<String, Sala> salas) throws CitaException {
-        String[] values = csvString.split(",");
-        if (values.length != 7) {
-            throw new CitaException("Formato de CSV inválido para Cita: " + csvString);
-        }
+        String[] v = csv.split(",");
+        if (v.length != 7) throw new CitaException("Formato de CSV inválido para Cita: " + csv);
+        Paciente p = pacientes.get(v[0]);
+        Medico m = medicos.get(v[1]);
+        Sala s = salas.get(v[2]);
+        if (p==null) throw new CitaException("Paciente no encontrado: " + v[0]);
+        if (m==null) throw new CitaException("Médico no encontrado: " + v[1]);
+        if (s==null) throw new CitaException("Sala no encontrada: " + v[2]);
 
-        String dniPaciente = values[0];
-        String dniMedico = values[1];
-        String numeroSala = values[2];
-        LocalDateTime fechaHora = LocalDateTime.parse(values[3]);
-        BigDecimal costo = new BigDecimal(values[4]);
-        EstadoCita estado = EstadoCita.valueOf(values[5]);
-        String observaciones = values[6].replaceAll(";", ",");
+        Cita c = new Cita(p, m, s, LocalDateTime.parse(v[3]), new BigDecimal(v[4]));
+        c.setEstado(EstadoCita.valueOf(v[5]));
+        c.setObservaciones(v[6].replaceAll(";", ","));
+        return c;
+    }
 
-        Paciente paciente = pacientes.get(dniPaciente);
-        Medico medico = medicos.get(dniMedico);
-        Sala sala = salas.get(numeroSala);
-
-        if (paciente == null) {
-            throw new CitaException("Paciente no encontrado: " + dniPaciente);
-        }
-        if (medico == null) {
-            throw new CitaException("Médico no encontrado: " + dniMedico);
-        }
-        if (sala == null) {
-            throw new CitaException("Sala no encontrada: " + numeroSala);
-        }
-
-        // Uso de Lombok Builder
-        Cita cita = Cita.builder()
-                .paciente(paciente)
-                .medico(medico)
-                .sala(sala)
-                .fechaHora(fechaHora)
-                .costo(costo)
-                .build();
-
-        cita.setEstado(estado);
-        cita.setObservaciones(observaciones);
-
-        return cita;
+    @Override public String toString(){
+        return "Cita{paciente=" + (paciente!=null?paciente.getNombreCompleto():"N/A") +
+                ", medico=" + (medico!=null?medico.getNombreCompleto():"N/A") +
+                ", sala=" + (sala!=null?sala.getNumero():"N/A") +
+                ", fechaHora=" + fechaHora + ", estado=" + estado + ", costo=" + costo + "}";
     }
 }

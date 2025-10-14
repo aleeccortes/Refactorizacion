@@ -1,8 +1,8 @@
+// src/main/java/org/example/Entidades/Departamento.java
 package org.example.Entidades;
 
-
-import lombok.Getter;
-import lombok.ToString;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -10,65 +10,64 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-@Getter
-@ToString(onlyExplicitlyIncluded = true)
+@Entity
+@Table(name="departamentos")
+@Getter @Builder @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Departamento implements Serializable {
 
-    @ToString.Include
-    private final String nombre;
+    @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+    private Long id;
 
-    @ToString.Include
-    private final EspecialidadMedica especialidad;
+    @Column(nullable=false, length=150)
+    private String nombre;
 
-    @ToString.Include
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false, length=50)
+    private EspecialidadMedica especialidad;
+
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name="hospital_id")
     private Hospital hospital;
 
-    private final List<Medico> medicos = new ArrayList<>();
-    private final List<Sala> salas = new ArrayList<>();
+    @OneToMany(mappedBy="departamento", cascade=CascadeType.ALL, orphanRemoval=true)
+    @Builder.Default
+    private List<Medico> medicos = new ArrayList<>();
 
-    public Departamento(String nombre, EspecialidadMedica especialidad) {
+    @OneToMany(mappedBy="departamento", cascade=CascadeType.ALL, orphanRemoval=true)
+    @Builder.Default
+    private List<Sala> salas = new ArrayList<>();
+
+    public Departamento(String nombre, EspecialidadMedica esp){
         this.nombre = validarString(nombre, "El nombre del departamento no puede ser nulo ni vacío");
-        this.especialidad = Objects.requireNonNull(especialidad, "La especialidad no puede ser nula");
+        this.especialidad = Objects.requireNonNull(esp, "La especialidad no puede ser nula");
     }
 
-    public void setHospital(Hospital hospital) {
-        if (this.hospital != hospital) {
-            if (this.hospital != null) {
-                this.hospital.getInternalDepartamentos().remove(this);
-            }
-            this.hospital = hospital;
-            if (hospital != null) {
-                hospital.getInternalDepartamentos().add(this);
-            }
-        }
+    public void setHospital(Hospital h){
+        if (this.hospital==h) return;
+        if (this.hospital!=null) this.hospital.getInternalDepartamentos().remove(this);
+        this.hospital = h;
+        if (h!=null) h.getInternalDepartamentos().add(this);
     }
 
-    public void agregarMedico(Medico medico) {
-        if (medico != null && !medicos.contains(medico)) {
-            medicos.add(medico);
-            medico.setDepartamento(this);
-        }
+    public void agregarMedico(Medico m){
+        if (m==null || medicos.contains(m)) return;
+        medicos.add(m);
+        m.setDepartamento(this);
     }
 
-    public Sala crearSala(String numero, String tipo) {
-        Sala sala = new Sala(numero, tipo, this);
-        salas.add(sala);
-        return sala;
+    public Sala crearSala(String numero, String tipo){
+        Sala s = new Sala(numero, tipo, this);
+        salas.add(s);
+        return s;
     }
 
-    public List<Medico> getMedicos() {
-        return Collections.unmodifiableList(medicos);
-    }
+    public List<Medico> getMedicos(){ return Collections.unmodifiableList(medicos); }
+    public List<Sala> getSalas(){ return Collections.unmodifiableList(salas); }
 
-    public List<Sala> getSalas() {
-        return Collections.unmodifiableList(salas);
-    }
-
-    private String validarString(String valor, String mensajeError) {
-        Objects.requireNonNull(valor, mensajeError);
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException(mensajeError);
-        }
-        return valor;
+    private String validarString(String v, String msg){
+        Objects.requireNonNull(v, msg);
+        if (v.trim().isEmpty()) throw new IllegalArgumentException(msg);
+        return v;
     }
 }

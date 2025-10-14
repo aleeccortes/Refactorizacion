@@ -9,14 +9,32 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // Usa tu versión de Java
+    }
 }
+
 dependencies {
+    // ✅ Lombok (solo en compilación, no en runtime)
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
+    // ✅ Hibernate ORM (JPA Provider)
+    implementation 'org.hibernate.orm:hibernate-core:6.4.4.Final'
+
+    // ✅ API de Jakarta Persistence (JPA 3.1)
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+
+    // ✅ Base de datos H2 (archivo local o memoria)
+    implementation 'com.h2database:h2:2.2.224'
+
+    // ✅ Logger simple para Hibernate (para mostrar logs en consola)
+    runtimeOnly 'org.slf4j:slf4j-simple:2.0.9'
+
+    // ✅ JUnit (para tests)
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 test {

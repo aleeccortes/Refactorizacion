@@ -1,46 +1,59 @@
+// src/main/java/org/example/Entidades/Medico.java
 package org.example.Entidades;
 
-import lombok.Getter;
-import lombok.ToString;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
+@Entity
+@Table(name="medico")
+@SuperBuilder
 @Getter
-@ToString(callSuper = true, onlyExplicitlyIncluded = true)
+@NoArgsConstructor
 public class Medico extends Persona implements Serializable {
 
-    @ToString.Include
-    private final Matricula matricula;
+    @Embedded
+    private Matricula matricula;
 
-    @ToString.Include
-    private final EspecialidadMedica especialidad;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false, length=50)
+    private EspecialidadMedica especialidad;
 
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name="departamento_id")
     private Departamento departamento;
-    private final List<Cita> citas = new ArrayList<>();
+
+    @OneToMany(mappedBy="medico", cascade=CascadeType.ALL, orphanRemoval=true)
+    @Builder.Default
+    private List<Cita> citas = new ArrayList<>();
 
     public Medico(String nombre, String apellido, String dni, LocalDate fechaNacimiento,
-                  TipoSangre tipoSangre, String numeroMatricula, EspecialidadMedica especialidad) {
+                  TipoSangre tipoSangre, String numeroMatricula, EspecialidadMedica especialidad){
         super(nombre, apellido, dni, fechaNacimiento, tipoSangre);
         this.matricula = new Matricula(numeroMatricula);
-        this.especialidad = Objects.requireNonNull(especialidad, "La especialidad no puede ser nula");
+        this.especialidad = especialidad;
+        this.citas = new ArrayList<>();
     }
 
-    public void setDepartamento(Departamento departamento) {
-        if (this.departamento != departamento) {
-            this.departamento = departamento;
+    public void setDepartamento(Departamento d){ this.departamento = d; }
+
+    public void addCita(Cita c){
+        if (c!=null && !citas.contains(c)){
+            citas.add(c);
+            c.setMedico(this);
         }
     }
+    public List<Cita> getCitas(){ return Collections.unmodifiableList(new ArrayList<>(citas)); }
 
-    public void addCita(Cita cita) {
-        this.citas.add(cita);
-    }
-
-    public List<Cita> getCitas() {
-        return Collections.unmodifiableList(new ArrayList<>(citas));
+    @Override public String toString(){
+        return "Medico{nombre='" + getNombre() + "', apellido='" + getApellido() +
+                "', especialidad=" + (especialidad!=null?especialidad.name():"null") +
+                ", matricula=" + (matricula!=null?matricula.getNumero():"null") + "}";
     }
 }

@@ -1,62 +1,69 @@
+// src/main/java/org/example/Entidades/Persona.java
 package org.example.Entidades;
 
-
-
+import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Objects;
 
+@MappedSuperclass
+@SuperBuilder
 @Getter
+@Setter
+@NoArgsConstructor
 @ToString(onlyExplicitlyIncluded = true)
 public abstract class Persona implements Serializable {
 
-    @ToString.Include
-    protected final String nombre;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ToString.Include
-    protected final String apellido;
+    @Column(name="nombre", nullable=false, length=50)
+    protected String nombre;
 
     @ToString.Include
-    protected final String dni;
+    @Column(name="apellido", nullable=false, length=50)
+    protected String apellido;
 
     @ToString.Include
-    protected final LocalDate fechaNacimiento;
+    @Column(name="dni", nullable=false, unique=true, length=50)
+    protected String dni;
 
     @ToString.Include
-    protected final TipoSangre tipoSangre;
+    @Column(name="FechaNacimiento", nullable=false)
+    protected LocalDate fechaNacimiento;
 
-    public Persona(String nombre, String apellido, String dni, LocalDate fechaNacimiento, TipoSangre tipoSangre) {
+    @ToString.Include
+    @Enumerated(EnumType.STRING)
+    @Column(name="TipoSangre", nullable=false, length=20)
+    protected TipoSangre tipoSangre;
+
+    protected Persona(String nombre, String apellido, String dni,
+                      LocalDate fechaNacimiento, TipoSangre tipoSangre) {
         this.nombre = validarString(nombre, "El nombre no puede ser nulo ni vacío");
         this.apellido = validarString(apellido, "El apellido no puede ser nulo ni vacío");
         this.dni = validarDni(dni);
-        this.fechaNacimiento = Objects.requireNonNull(fechaNacimiento, "La fecha de nacimiento no puede ser nula");
+        this.fechaNacimiento = Objects.requireNonNull(fechaNacimiento, "La fecha no puede ser nula");
         this.tipoSangre = Objects.requireNonNull(tipoSangre, "El tipo de sangre no puede ser nulo");
     }
 
-    public String getNombreCompleto() {
-        return nombre + " " + apellido;
-    }
+    public String getNombreCompleto() { return nombre + " " + apellido; }
 
-    public int getEdad() {
-        return LocalDate.now().getYear() - fechaNacimiento.getYear();
+    private String validarString(String v, String msg){
+        Objects.requireNonNull(v, msg);
+        if (v.trim().isEmpty()) throw new IllegalArgumentException(msg);
+        return v;
     }
-
-    private String validarString(String valor, String mensajeError) {
-        Objects.requireNonNull(valor, mensajeError);
-        if (valor.trim().isEmpty()) {
-            throw new IllegalArgumentException(mensajeError);
-        }
-        return valor;
-    }
-
-    private String validarDni(String dni) {
+    protected String validarDni(String dni){
         Objects.requireNonNull(dni, "El DNI no puede ser nulo");
-        if (!dni.matches("\\d{7,8}")) {
-            throw new IllegalArgumentException("El DNI debe tener 7 u 8 dígitos");
-        }
+        if (!dni.matches("\\d{7,8}")) throw new IllegalArgumentException("El DNI debe tener 7 u 8 dígitos");
         return dni;
     }
 }
