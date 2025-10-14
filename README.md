@@ -1,39 +1,47 @@
-🏥 Sistema de Gestión Hospitalaria
+🏥 **Sistema de Gestión Hospitalaria**
 
-Proyecto en Java 21 que simula la gestión de un hospital: médicos, pacientes, departamentos, salas y citas médicas.
-Se refactorizó el código para usar Lombok, reduciendo getters, setters y toString() escritos a mano.
+Proyecto en **Java 21** que simula la gestión integral de un hospital: médicos, pacientes, departamentos, salas y citas médicas.  
+El código fue **refactorizado** para incorporar **Lombok**, reduciendo la necesidad de escribir manualmente métodos *getters*, *setters* y *toString()*.
 
-📋 Funcionalidades
+---
 
-Registro de hospitales, departamentos, médicos y pacientes.
+### 📋 **Funcionalidades principales**
 
-Generación automática de historia clínica para cada paciente.
+- Registro de hospitales, departamentos, médicos y pacientes.  
+- Generación automática de historia clínica para cada paciente.  
+- Programación de citas médicas validando:
+  - Disponibilidad del médico.  
+  - Disponibilidad de la sala.  
+  - Coincidencia de especialidad con el departamento.  
+- Guardado y carga de citas en formato **CSV**.  
+- Persistencia de entidades mediante **JPA** y **base de datos H2** embebida.
 
-Programación de citas médicas validando:
+---
 
-Disponibilidad del médico.
+### 🛠️ **Tecnologías utilizadas**
 
-Disponibilidad de la sala.
+- ☕ **Java 21**  
+- 🧩 **JPA (Jakarta Persistence API)**  
+- 🗃️ **Base de datos H2 (modo embebido)**  
+- 🪶 **Lombok**  
+- 🧱 **Gradle**  
+- 💻 **IntelliJ IDEA**
 
-Coincidencia de especialidad con el departamento.
+---
 
-Guardado y carga de citas en CSV.
+### 💾 **Configuración de persistencia**
 
-🛠️ Tecnologías
+El proyecto utiliza un archivo `persistence.xml` configurado para conectar con la base de datos **H2** local:  
+- Creación automática de tablas mediante Hibernate.  
+- Soporte para transacciones con `EntityManagerFactory`.  
+- Datos almacenados temporalmente (modo archivo o memoria).
 
-Java 21
+---
 
-Gradle
+### 📥 **Clonar y ejecutar el proyecto**
 
-Lombok
-
-IntelliJ IDEA
-
-📥Clonar el proyecto:
-
-1.)Ir a la terminal de Intellig IDEA del proyecto y escribir el siguiente comando:
-
-git clone https://github.com/aleeccortes/Refactorizacion.git
-
-2.)Ejecutar
+1. Abrí la terminal de IntelliJ IDEA en el directorio deseado.  
+2. Ejecutá el siguiente comando para clonar el repositorio:
+   ```bash
+   git clone https://github.com/aleeccortes/Refactorizacion.git
 
